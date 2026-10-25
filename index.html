@@ -157,14 +157,15 @@ const app=initializeApp({
  appId:"1:769329495086:web:8f3b416253d55b972e73bf"});
 const db=getFirestore(app),au=getAuth(app);
 const list=s=>s.docs.map(d=>({...d.data(),id:d.id}));
+const W=e=>{alert('Хато: '+e.code+'. Қоидаҳои Firestore ва почтаи админро санҷед.');throw e};
 window.DB={
  menu:cb=>onSnapshot(collection(db,'menu'),s=>cb(list(s))),
  orders:cb=>onSnapshot(query(collection(db,'orders'),orderBy('ts')),s=>cb(list(s)),e=>console.log(e)),
  order:(id,cb)=>onSnapshot(doc(db,'orders',id),s=>cb(s.exists()?{...s.data(),id:s.id}:null)),
  cfg:cb=>onSnapshot(doc(db,'cfg','main'),s=>cb(s.data()||{})),
- set:(c,id,d)=>setDoc(doc(db,c,id),d,{merge:true}),
- add:(c,d)=>addDoc(collection(db,c),d),
- del:(c,id)=>deleteDoc(doc(db,c,id)),
+ set:(c,id,d)=>setDoc(doc(db,c,id),d,{merge:true}).catch(W),
+ add:(c,d)=>addDoc(collection(db,c),d).catch(W),
+ del:(c,id)=>deleteDoc(doc(db,c,id)).catch(W),
  accept:(o,m,ids)=>{const b=writeBatch(db);
   o.it.forEach(i=>{if(ids.includes(i.id))b.update(doc(db,'menu',i.id),{k:increment(-i.q)})});
   b.update(doc(db,'orders',o.id),{st:'ok',m,at:Date.now()});return b.commit()},
