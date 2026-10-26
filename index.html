@@ -63,6 +63,7 @@ select{width:100%;margin:5px 0;font:inherit;color:var(--t);background:var(--c);b
 .nb .on{background:color-mix(in srgb,var(--p) 15%,transparent);color:var(--p)}
 .nb .on svg{transform:translateY(-1px) scale(1.12)}
 .fx{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+.bn[onclick]{cursor:pointer}.bn small{color:#fff;font-weight:700;margin-top:4px}
 </style></head><body><div id="w">
 <div id="app">Бор мешавад...</div>
 <input type="file" accept="image/*" id="fi" hidden onchange="Up(this)">
@@ -71,7 +72,7 @@ select{width:100%;margin:5px 0;font:inherit;color:var(--t);background:var(--c);b
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S={d:[],o:[],pay:'',c:{}},LO=null,AU=null,uo=()=>{},ao=0;
-let v=location.hash=='#admin'?'a':'c',st=0,det='',tab='o',cart={},nt={},f={type:'del',pay:'cash'},pid='',nph='',ck='',cl='h',gc='',nbi='',hist=null;
+let v=location.hash=='#admin'?'a':'c',st=0,det='',tab='o',cart={},nt={},f={type:'del',pay:'cash'},pid='',nph='',ck='',cl='h',gc='',nbi='',hist=null,ed='';
 const ME=()=>{try{return JSON.parse(localStorage.getItem('me'))||{}}catch(e){return{}}};
 const IDS=()=>{try{return JSON.parse(localStorage.getItem('ids'))||[]}catch(e){return[]}};
 const OL=()=>S.o.filter(o=>Date.now()-o.ts<864e5);
@@ -108,6 +109,7 @@ function Rv(id,s){DB.set('orders',id,{st:s})}
 function ban(o){
  const L=o.it.map(i=>esc(i.n)+' × '+i.q+(i.c?' ('+esc(i.c)+')':'')).join(', ');
  if(o.st=='new')return `⏳ Фармоиши ${sid(o)} интизори тасдиқ аст.`;
+ if(o.st=='rej')return '🚫 Бубахшед, фармоиши '+sid(o)+' рад шуд.'+(o.rs?' Сабаб: '+esc(o.rs):'');
  if(o.st=='done')return '🎉 Ташаккур! Фармоиш гирифта шуд.';
  if(o.st=='no')return '😔 Бубахшед, мо бо шумо тамос мегирем.';
  if(Date.now()>=due(o))return `✅ Қабул шуд: ${L}.<br><b>Фармоишро гирифтед?</b><div class="nv"><button class="pb" onclick="Rv('${o.id}','done')">Бале</button><button onclick="Rv('${o.id}','no')">Не</button></div>`;
@@ -139,7 +141,7 @@ function C(){
  return h;
 }
 function SL(){const b=S.c.ban||[];if(!b.length)return '<div class="hero"><div class="lg">🍔</div><div><h1>TFC</h1><small>Тез ва болаззат</small></div></div>';
- return '<div id="sl">'+b.map(x=>`<div class="bn" ${x.i?`style="background-image:linear-gradient(#0000,#0008),url(${x.i})"`:''}><b>${esc(x.t)}</b><span>${esc(x.s||'')}</span></div>`).join('')+'</div>'}
+ return '<div id="sl">'+b.map(x=>`<div class="bn" ${x.d?`onclick="det='${x.d}';R()"`:''} ${x.i?`style="background-image:linear-gradient(#0000,#0008),url(${x.i})"`:''}><b>${esc(x.t)}</b><span>${esc(x.s||'')}</span>${x.d?'<small>Фармоиш додан →</small>':''}</div>`).join('')+'</div>'}
 function NV(){
  const I={h:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
  g:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
@@ -155,7 +157,7 @@ function MP(){const m=ME();
  let h=`<h3>Ман</h3><div class="cd"><input id="mn" placeholder="Ном" value="${esc(m.nm||'')}"><input id="mp" type="tel" placeholder="Рақами телефон" value="${esc(m.ph||'')}"><button class="pb" onclick="SM()">Захира кардан</button></div><h3>Фармоишҳои ман</h3>`;
  if(!hist)return h+'<p>Бор мешавад...</p>';
  if(!hist.length)return h+'<p>Фармоиш ҳоло нест.</p>';
- return h+hist.map(o=>`<div class="cd"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleDateString()} ${new Date(o.ts).toLocaleTimeString().slice(0,5)}<br>${o.it.map(i=>esc(i.n)+' × '+i.q).join(', ')}<br><b>${o.it.reduce((a,i)=>a+i.p*i.q,0)} сомонӣ</b> · ${({new:'⏳ Интизор',ok:'✅ Қабул шуд',done:'🎉 Гирифта шуд',no:'❌ Нагирифт'})[o.st]||''}</div>`).join('')}
+ return h+hist.map(o=>`<div class="cd"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleDateString()} ${new Date(o.ts).toLocaleTimeString().slice(0,5)}<br>${o.it.map(i=>esc(i.n)+' × '+i.q).join(', ')}<br><b>${o.it.reduce((a,i)=>a+i.p*i.q,0)} сомонӣ</b> · ${({new:'⏳ Интизор',ok:'✅ Қабул шуд',done:'🎉 Гирифта шуд',no:'❌ Нагирифт',rej:'🚫 Рад шуд'})[o.st]||''}</div>`).join('')}
 function SM(){try{localStorage.setItem('me',JSON.stringify({nm:$('#mn').value,ph:$('#mp').value}))}catch(e){}T('✓ Захира шуд')}
 function LH(){hist=null;R();Promise.all(IDS().map(i=>DB.get(i).catch(()=>null))).then(a=>{hist=a.filter(Boolean);if(cl=='m')R()})}
 setInterval(()=>{const e=$('#sl');if(e&&e.children.length>1){const w=e.clientWidth,n=e.children.length;e.scrollTo({left:((Math.round(e.scrollLeft/w)+1)%n)*w,behavior:'smooth'})}},4000);
@@ -179,13 +181,15 @@ function Add(){
  const d={n,p,t:+$('#at').value||10,k:+$('#ak').value||0,r:$('#ar').value,g:$('#ag').value,e:'🍽️'};
  if(+$('#ao').value)d.o=+$('#ao').value;if(nph)d.i=nph;nph='';DB.add('menu',d).then(R);
 }
+const ED=d=>{const i=(k,p,t)=>`<label><small>${p}</small><input ${t?'type="number"':''} value="${esc(d[k]||'')}" onchange="DB.set('menu','${d.id}',{${k}:${t?'+this.value':'this.value'}})"></label>`;return i('n','Ном')+i('r','Рецепт / таркиб')+i('t','Дақиқа',1)+i('o','Нархи пештара (аксия, 0 = нест)',1)};
 const GS=(v,fn,id)=>`<select ${id?'id="'+id+'"':''} onchange="${fn}"><option value="">Гурӯҳ</option>${(S.c.cats||[]).map(x=>`<option value="${x.id}" ${x.id==v?'selected':''}>${esc(x.n)}</option>`).join('')}</select>`;
+function Rj(id){const r=prompt('Сабаби рад кардан (ихтиёрӣ):');if(r===null)return;DB.set('orders',id,{st:'rej',rs:r})}
 function CD(k,id){DB.set('cfg','main',{[k]:(S.c[k]||[]).filter(x=>x.id!=id)})}
 function GA(){const n=$('#gn').value.trim();if(!n)return;DB.set('cfg','main',{cats:[...(S.c.cats||[]),{id:Date.now().toString(36),n,e:$('#ge').value}]})}
-function BA(){const t=$('#bt').value.trim();if(!t)return;DB.set('cfg','main',{ban:[...(S.c.ban||[]),{id:Date.now().toString(36),t,s:$('#bs').value,i:nbi}]});nbi=''}
+function BA(){const t=$('#bt').value.trim();if(!t)return;DB.set('cfg','main',{ban:[...(S.c.ban||[]),{id:Date.now().toString(36),t,s:$('#bs').value,d:$('#bd').value,i:nbi}]});nbi=''}
 function AC(){const c=S.c.cats||[],b=S.c.ban||[];
  return `<div class="cd"><b>Гурӯҳҳо</b>${c.map(x=>`<div class="r"><span>${esc(x.e||'')} ${esc(x.n)}</span><button onclick="CD('cats','${x.id}')">🗑</button></div>`).join('')}<input id="gn" placeholder="Номи гурӯҳ (масалан: Бургер)"><input id="ge" placeholder="Эмодзи (масалан: 🍔)"><button class="pb" onclick="GA()">Илова кардан</button></div>
- <div class="cd"><b>Баннерҳо (комбо / аксия)</b>${b.map(x=>`<div class="r"><span>${x.i?`<img class="th" src="${x.i}" alt="">`:''}${esc(x.t)}</span><button onclick="CD('ban','${x.id}')">🗑</button></div>`).join('')}<input id="bt" placeholder="Сарлавҳа (масалан: Комбо 40 сомонӣ)"><input id="bs" placeholder="Матни хурд"><button onclick="pid='bn';$('#fi').click()">📷 Акс ${nbi?'✓':''}</button> <button class="pb" onclick="BA()">Илова кардан</button></div>`}
+ <div class="cd"><b>Баннерҳо (комбо / аксия)</b>${b.map(x=>`<div class="r"><span>${x.i?`<img class="th" src="${x.i}" alt="">`:''}${esc(x.t)}</span><button onclick="CD('ban','${x.id}')">🗑</button></div>`).join('')}<input id="bt" placeholder="Сарлавҳа (масалан: Комбо 40 сомонӣ)"><input id="bs" placeholder="Матни хурд"><select id="bd"><option value="">Таом/комборо пайваст кунед</option>${S.d.map(d=>`<option value="${d.id}">${esc(d.n)}</option>`).join('')}</select><button onclick="pid='bn';$('#fi').click()">📷 Акс ${nbi?'✓':''}</button> <button class="pb" onclick="BA()">Илова кардан</button></div>`}
 function AS(){const c=S.c,i=(k,p)=>`<input placeholder="${p}" value="${esc(c[k]||'')}" onchange="DB.set('cfg','main',{${k}:this.value})">`;
  return `<div class="cd"><b>Тамос</b>${i('ig','Instagram линк (https://...)')}${i('ph','Рақами телефон')}${i('ad','Суроға')}${i('ml','Линки харита (Google Maps)')}</div>`}
 function A(){
@@ -193,16 +197,16 @@ function A(){
  let h=`<div class="nv"><button class="${tab=='o'?'on':''}" onclick="tab='o';R()">Фармоишҳо${OL().filter(o=>o.st=='new').length?' 🔴'+OL().filter(o=>o.st=='new').length:''}</button><button class="${tab=='m'?'on':''}" onclick="tab='m';R()">Меню</button><button class="${tab=='c'?'on':''}" onclick="tab='c';R()">Гурӯҳ/Баннер</button><button class="${tab=='s'?'on':''}" onclick="tab='s';R()">Тамос</button><button onclick="DB.logout()">⎋</button></div>`;
  if(tab=='o'){
   if(!OL().length)h+='<p>Фармоиш ҳоло нест.</p>';
-  h+=OL().reverse().map(o=>`<div class="cd ${o.st=='done'?'ok':o.st=='no'?'bad':o.st=='new'?'nw':''}"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleTimeString().slice(0,5)} · ${esc(o.nm||'')} ${esc(o.ph)} · ${o.ty=='del'?'Доставка: '+esc(o.a):'Дар ҷой'} · ${o.pay=='card'?'Корт':'Нақд'}
+  h+=OL().reverse().map(o=>`<div class="cd ${o.st=='done'?'ok':(o.st=='no'||o.st=='rej')?'bad':o.st=='new'?'nw':''}"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleTimeString().slice(0,5)} · ${esc(o.nm||'')} ${esc(o.ph)} · ${o.ty=='del'?'Доставка: '+esc(o.a):'Дар ҷой'} · ${o.pay=='card'?'Корт':'Нақд'}
   ${o.it.map(i=>`<div class="r"><span>${esc(i.n)} × ${i.q}${i.c?'<br><small>💬 '+esc(i.c)+'</small>':''}</span><span>${i.p*i.q} ${o.st=='new'?`<button onclick="X('${o.id}','${i.id}')">✕</button>`:''}</span></div>`).join('')}
   <div class="r"><b>Ҷамъ: ${o.it.reduce((a,i)=>a+i.p*i.q,0)} сомонӣ</b></div>
   ${o.ck?`<small>🧾 Чеки пардохт:</small><img class="im rc" src="${o.ck}" alt="">`:''}
-  ${o.st=='new'?`<input id="m${o.id}" type="number" placeholder="Чанд дақиқа омода мешавад?"><button class="pb" onclick="Ac('${o.id}')">Қабул ва паём ба мизоҷ</button>`
+  ${o.st=='new'?`<input id="m${o.id}" type="number" placeholder="Чанд дақиқа омода мешавад?"><button class="pb" onclick="Ac('${o.id}')">Қабул ва паём ба мизоҷ</button> <button onclick="Rj('${o.id}')">🚫 Рад кардан</button>`
   :o.st=='ok'?`<small>✅ Қабул шуд · ${o.m} дақ. · Ҷавоби мизоҷ интизор аст</small>`
-  :o.st=='done'?'<b>✅ Муваффақ</b>':'<b>❌ Мизоҷ нагирифт</b>'}</div>`).join('');
+  :o.st=='done'?'<b>✅ Муваффақ</b>':o.st=='rej'?'<b>🚫 Рад шуд</b>'+(o.rs?' · '+esc(o.rs):''):'<b>❌ Мизоҷ нагирифт</b>'}</div>`).join('');
  }else if(tab=='c'){h+=AC()}else if(tab=='s'){h+=AS()}else{
-  h+=S.d.map(d=>`<div class="cd"><div class="r"><span>${d.i?`<img class="th" src="${d.i}" alt="">`:''}<b>${esc(d.n)}</b></span><span><button onclick="pid='${d.id}';$('#fi').click()">📷</button> <button onclick="if(confirm('Нест кунем?'))DB.del('menu','${d.id}')">🗑</button></span></div>
-  <div class="r"><label><small>Нарх</small><input type="number" value="${d.p}" onchange="DB.set('menu','${d.id}',{p:+this.value})"></label><label><small>Мондаи анбор (дона)</small><input type="number" value="${d.k}" onchange="DB.set('menu','${d.id}',{k:+this.value})"></label></div>${GS(d.g,"DB.set('menu','"+d.id+"',{g:this.value})")}</div>`).join('')
+  h+=S.d.map(d=>`<div class="cd"><div class="r"><span>${d.i?`<img class="th" src="${d.i}" alt="">`:''}<b>${esc(d.n)}</b></span><span><button onclick="ed=ed=='${d.id}'?'':'${d.id}';R()">✏️</button> <button onclick="pid='${d.id}';$('#fi').click()">📷</button> <button onclick="if(confirm('Нест кунем?'))DB.del('menu','${d.id}')">🗑</button></span></div>
+  <div class="r"><label><small>Нарх</small><input type="number" value="${d.p}" onchange="DB.set('menu','${d.id}',{p:+this.value})"></label><label><small>Мондаи анбор (дона)</small><input type="number" value="${d.k}" onchange="DB.set('menu','${d.id}',{k:+this.value})"></label></div>${GS(d.g,"DB.set('menu','"+d.id+"',{g:this.value})")}${ed==d.id?ED(d):''}</div>`).join('')
   +`<div class="cd"><b>Маълумоти пардохт (рақами корт)</b><input placeholder="Рақами корт ва ном" value="${esc(S.pay||'')}" onchange="DB.set('cfg','main',{pay:this.value})"></div><div class="cd"><b>Таоми нав / комбо / аксия</b><input id="an" placeholder="Ном (масалан: Комбо: бургер + фри)"><input id="ap" type="number" placeholder="Нарх"><input id="ao" type="number" placeholder="Нархи пештара (барои аксия)"><input id="at" type="number" placeholder="Дақиқа"><input id="ak" type="number" placeholder="Чанд дона дорем?"><input id="ar" placeholder="Рецепт / таркиб">${GS('','','ag')}<button onclick="pid='';$('#fi').click()">📷 Акс интихоб кунед ${nph?'✓':''}</button> <button class="pb" onclick="Add()">Илова кардан</button></div>`;
  }
  return h;
