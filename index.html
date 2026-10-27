@@ -68,6 +68,11 @@ select{width:100%;margin:5px 0;font:inherit;color:var(--t);background:var(--c);b
 #ch{display:flex;gap:8px;overflow-x:auto;margin:0 0 12px;scrollbar-width:none}#ch button{white-space:nowrap;border-radius:20px;padding:8px 14px}
 .nb button{position:relative}.bd{position:absolute;top:2px;left:55%;background:var(--p);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px}
 img.lg{width:64px;height:64px;border-radius:16px;box-shadow:0 4px 14px #0006}
+.tl{min-height:112px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.yl{border:2px solid #f5b301;background:color-mix(in srgb,#f5b301 14%,var(--c))}
+.bl{border:2px solid #2f7de1;background:color-mix(in srgb,#2f7de1 14%,var(--c))}
+.ok{background:color-mix(in srgb,#1d8a4a 14%,var(--c))}
+i{font-style:normal}.dt{width:9px;height:9px;padding:0;left:58%;top:4px}
 </style></head><body><div id="w">
 <div id="app">Бор мешавад...</div>
 <input type="file" accept="image/*" id="fi" hidden onchange="Up(this)">
@@ -78,10 +83,16 @@ const LOGO=document.getElementById('ic').href;
 document.head.insertAdjacentHTML('beforeend','<link rel="apple-touch-icon" href="'+LOGO+'">');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S={d:[],o:[],pay:'',c:{}},LO=null,AU=null,uo=()=>{},ao=0;
-let v=location.hash=='#admin'?'a':'c',st=0,det='',tab='o',cart={},nt={},f={type:'del',pay:'cash'},pid='',nph='',ck='',cl='h',gc='',nbi='',hist=null,ed='',sv=0;
+let v=location.hash=='#admin'?'a':'c',st=0,det='',tab='o',cart={},nt={},f={type:'del',pay:'cash'},pid='',nph='',ck='',cl='h',gc='',nbi='',hist=null,ed='',sv=0,nf=0;
 const ME=()=>{try{return JSON.parse(localStorage.getItem('me'))||{}}catch(e){return{}}};
 const IDS=()=>{try{return JSON.parse(localStorage.getItem('ids'))||[]}catch(e){return[]}};
-const OL=()=>S.o.filter(o=>Date.now()-o.ts<864e5);
+const AC_=['new','ok','sent'];
+const OL=()=>S.o.filter(o=>AC_.includes(o.st));
+const OR=()=>S.o.filter(o=>!AC_.includes(o.st)&&Date.now()-(o.pt||o.rt||o.ts)<864e5);
+const stx={ok:'Фармоиши шумо қабул шуд',sent:'Фармоиш таёр шуд ва фиристода шуд',paid:'Ташаккур! Фармоиш анҷом ёфт',rej:'Фармоиши шумо рад шуд'};
+function NT(o){if(LO&&o&&LO.id==o.id&&LO.st!=o.st&&stx[o.st]){T('🔔 '+stx[o.st],4500);try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}}
+const uns=()=>{try{return !!LO&&localStorage.getItem('ns')!=LO.id+LO.st}catch(e){return false}};
+function NS(){try{if(LO)localStorage.setItem('ns',LO.id+LO.st)}catch(e){}}
 const safe=u=>/^https?:\/\//i.test(u||'')?esc(u):'';
 const dd=i=>S.d.find(x=>x.id==i);
 const dk=k=>dd(k.split('|')[0]);
@@ -93,7 +104,7 @@ const pic=(d,c)=>d.i?`<img class="im ${c||''}" src="${d.i}" alt="">`:`<div class
 const due=o=>o.at+(o.m+10)*60000;
 const sid=o=>'#'+o.id.slice(-4);
 function R(){$('#app').innerHTML=v=='c'?C():A()}
-function T(t){const e=document.createElement('div');e.className='ts';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),1600)}
+function T(t,ms){const e=document.createElement('div');e.className='ts';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),ms||1600)}
 let ld=0;function Bp(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();setTimeout(()=>{o.stop();c.close()},350)}catch(e){}}
 window.onhashchange=()=>{v=location.hash=='#admin'?'a':'c';R()};
 function Q(i,k){
@@ -112,8 +123,8 @@ async function P(){
  try{
   const r=await DB.add('orders',o);
   try{localStorage.setItem('last',r.id);localStorage.setItem('ids',JSON.stringify([r.id,...IDS()].slice(0,30)));localStorage.setItem('me',JSON.stringify({nm:f.nm||'',ph:f.ph}))}catch(e){}
-  uo();uo=DB.order(r.id,x=>{LO=x;if(st==0&&v=='c')R()});
-  cart={};nt={};st=0;ck='';f={type:'del',pay:'cash'};R();
+  uo();uo=DB.order(r.id,x=>{NT(x);LO=x;if(st==0&&v=='c')R()});
+  cart={};nt={};st=0;ck='';f={type:'del',pay:'cash'};R();T('✅ Фармоиш фиристода шуд',4000);
  }catch(e){alert('Хато: фармоиш нарасид. Боз кӯшиш кунед.')}
 }
 function Rv(id,s){DB.set('orders',id,{st:s})}
@@ -121,10 +132,9 @@ function ban(o){
  const L=o.it.map(i=>esc(i.n)+' × '+i.q+(i.c?' ('+esc(i.c)+')':'')).join(', ');
  if(o.st=='new')return `⏳ Фармоиши ${sid(o)} интизори тасдиқ аст.`;
  if(o.st=='rej')return '🚫 Бубахшед, фармоиши '+sid(o)+' рад шуд.'+(o.rs?' Сабаб: '+esc(o.rs):'');
- if(o.st=='done')return '🎉 Ташаккур! Фармоиш гирифта шуд.';
- if(o.st=='no')return '😔 Бубахшед, мо бо шумо тамос мегирем.';
- if(Date.now()>=due(o))return `✅ Қабул шуд: ${L}.<br><b>Фармоишро гирифтед?</b><div class="nv"><button class="pb" onclick="Rv('${o.id}','done')">Бале</button><button onclick="Rv('${o.id}','no')">Не</button></div>`;
- return `✅ Фармоиши ${sid(o)} қабул шуд: ${L}.<br>Омода мешавад: ${o.m} дақиқа.`;
+ if(o.st=='ok')return `🟡 Қабул шуд: ${L}.<br>Таёр шуда истодааст: ${o.m} дақиқа.`;
+ if(o.st=='sent')return `📦 Фармоиши ${sid(o)} таёр шуд ва фиристода шуд!`;
+ return '🎉 Ташаккур! Фармоиш анҷом ёфт.';
 }
 function C(){
  let h=st==0&&cl=='h'?SL():'';
@@ -133,7 +143,7 @@ function C(){
   const n=Object.values(cart).reduce((a,b)=>a+b,0);
   if(!S.d.length)h+='<p>Меню ҳоло холӣ аст.</p>';
   h+=cl=='t'?CT():cl=='m'?MP():cl=='h'?CH():'';
-  if(cl=='h')h+='<div class="g">'+(gc?S.d.filter(x=>x.g==gc):S.d).map(d=>`<div class="cd ${d.k>0?'':'off'}" onclick="det='${d.id}';sv=0;R()">${d.o?'<span class="rib">Аксия</span>':''}${pic(d)}<b>${esc(d.n)}</b><div class="pr">${d.o?`<s>${d.o}</s> `:''}${d.v&&d.v.length?'аз '+Math.min(...d.v.map(x=>x.p)):d.p} сомонӣ</div><small>${d.k>0?'⏱ '+d.t+' дақ.':'Нест'}</small></div>`).join('')+'</div>';
+  if(cl=='h'&&(gc||!(S.c.cats||[]).length))h+='<div class="g">'+(gc&&gc!='all'?S.d.filter(x=>x.g==gc):S.d).map(d=>`<div class="cd ${d.k>0?'':'off'}" onclick="det='${d.id}';sv=0;R()">${d.o?'<span class="rib">Аксия</span>':''}${pic(d)}<b>${esc(d.n)}</b><div class="pr">${d.o?`<s>${d.o}</s> `:''}${d.v&&d.v.length?'аз '+Math.min(...d.v.map(x=>x.p)):d.p} сомонӣ</div><small>${d.k>0?'⏱ '+d.t+' дақ.':'Нест'}</small></div>`).join('')+'</div>';
   if(det&&dd(det)){const d=dd(det);h+=`<div class="md" onclick="det='';R()"><div class="bx" onclick="event.stopPropagation()">${pic(d,'bg')}<h3>${esc(d.n)}</h3><p>${esc(d.r||'')}</p>${d.v&&d.v.length?`<div class="r" style="flex-wrap:wrap;justify-content:flex-start">${d.v.map((x,j)=>`<button class="${sv==j?'on':''}" onclick="sv=${j};R()">${esc(x.n)} · ${x.p}</button>`).join('')}</div>`:''}<p>⏱ ${d.t} дақиқа · <b>${d.v&&d.v.length?d.v[sv].p:d.p} сомонӣ</b></p>${d.k>0?`<button class="pb" onclick="Q('${d.id}${d.v&&d.v.length?'|'+sv:''}',1);det='';R();T('✓ Ба сабад илова шуд')">Ба сабад илова кунед</button>`:'<p><b>Ҳозир нест</b></p>'}</div></div>`}
   if(n)h+=`<button class="pb fx" onclick="st=1;R()">Фармоиш (${n}) · ${tot(cart)} сомонӣ</button>`;
  }else if(st==1){
@@ -158,20 +168,26 @@ function NV(){
  t:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
  m:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
  const n=Object.values(cart).reduce((a,b)=>a+b,0);
- const t=(k,l)=>`<button class="${cl==k?'on':''}" onclick="${k=='c'?'Ct()':`cl='${k}';gc='';det='';${k=='m'?'LH()':'R()'}`}"><svg viewBox="0 0 24 24">${I[k]}</svg><span>${l}</span>${k=='c'&&n?`<i class="bd">${n}</i>`:''}</button>`;
+ const t=(k,l)=>`<button class="${cl==k?'on':''}" onclick="${k=='c'?'Ct()':`cl='${k}';gc='';det='';nf=0;${k=='m'?'LH()':'R()'}`}"><svg viewBox="0 0 24 24">${I[k]}</svg><span>${l}</span>${k=='c'&&n?`<i class="bd">${n}</i>`:''}${k=='m'&&uns()?'<i class="bd dt"></i>':''}</button>`;
  return `<div class="nb">${t('h','Асосӣ')}${t('c','Сабад')}${t('t','Тамос')}${t('m','Ман')}</div>`}
 function CH(){const c=S.c.cats||[];if(!c.length)return '';
- return '<div id="ch"><button class="'+(!gc?'on':'')+'" onclick="gc=\'\';R()">Ҳама</button>'+c.map(x=>`<button class="${gc==x.id?'on':''}" onclick="gc='${x.id}';R()">${esc(x.e||'')} ${esc(x.n)}</button>`).join('')+'</div>'}
+ if(!gc)return '<div class="g">'+[{id:'all',n:'Ҳама',e:'🍽️'},...c].map(x=>`<div class="cd tl" onclick="gc='${x.id}';R()"><div class="em">${esc(x.e||'🍽️')}</div><b>${esc(x.n)}</b><small>${x.id=='all'?S.d.length:S.d.filter(d=>d.g==x.id).length} намуд</small></div>`).join('')+'</div>';
+ const g=c.find(x=>x.id==gc);
+ return '<div class="nv"><button onclick="gc=\'\';R()">← Гурӯҳҳо</button><b>'+esc(g?g.n:'Ҳама')+'</b></div>'}
 function Ct(){if(!Object.keys(cart).length)return T('Сабад холӣ аст');st=1;R()}
 function TL(){const c=S.c.cats||[];if(!c.length)return '<p>Гурӯҳ ҳоло нест.</p>';
  return '<div class="g">'+c.map(x=>`<div class="cd" onclick="gc='${x.id}';R()"><div class="em">${esc(x.e||'🍽️')}</div><b>${esc(x.n)}</b><br><small>${S.d.filter(d=>d.g==x.id).length} намуд</small></div>`).join('')+'</div>'}
 function CT(){const c=S.c;const b=(e,n,h)=>h?`<a class="bt" href="${h}"${h.startsWith('http')?' target="_blank" rel="noopener"':''}>${e} ${n}</a>`:'';
  return '<h3>Тамос</h3>'+b('📷','Instagram',safe(c.ig))+b('📞',esc(c.ph||'Телефон'),c.ph?'tel:'+esc(c.ph.replace(/[^0-9+]/g,'')):'')+b('📍',esc(c.ad||'Суроға'),safe(c.ml)||(c.ad?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.ad):''))}
-function MP(){const m=ME();
- let h=`<h3>Ман</h3><div class="cd"><input id="mn" placeholder="Ном" value="${esc(m.nm||'')}"><input id="mp" type="tel" placeholder="Рақами телефон" value="${esc(m.ph||'')}"><button class="pb" onclick="SM()">Захира кардан</button></div><h3>Фармоишҳои ман</h3>`;
+function NP(){
+ const ev=[];(hist||[]).forEach(o=>{ev.push([o.ts,'📝 Фармоиши '+sid(o)+' дода шуд']);if(o.at)ev.push([o.at,'🟡 Қабул шуд, таёр мешавад: '+o.m+' дақ.']);if(o.sa)ev.push([o.sa,'📦 Таёр шуд ва фиристода шуд']);if(o.pt)ev.push([o.pt,'✅ Фармоиш анҷом ёфт']);if(o.rt)ev.push([o.rt,'🚫 Фармоиши '+sid(o)+' рад шуд'+(o.rs?': '+esc(o.rs):'')])});
+ ev.sort((a,b)=>b[0]-a[0]);
+ return `<div class="r"><h3>Огоҳиҳо</h3><button onclick="nf=0;R()">← Ман</button></div>`+(!hist?'<p>Бор мешавад...</p>':!ev.length?'<p>Огоҳӣ ҳоло нест.</p>':ev.map(e=>`<div class="cd">${e[1]}<br><small>${new Date(e[0]).toLocaleDateString()} · ${new Date(e[0]).toLocaleTimeString().slice(0,5)}</small></div>`).join(''))}
+function MP(){const m=ME();if(nf)return NP();
+ let h=`<div class="r"><h3>Ман</h3><button onclick="nf=1;NS();R()">🔔${uns()?' 🔴':''}</button></div><div class="cd"><input id="mn" placeholder="Ном" value="${esc(m.nm||'')}"><input id="mp" type="tel" placeholder="Рақами телефон" value="${esc(m.ph||'')}"><button class="pb" onclick="SM()">Захира кардан</button></div><h3>Фармоишҳои ман</h3>`;
  if(!hist)return h+'<p>Бор мешавад...</p>';
  if(!hist.length)return h+'<p>Фармоиш ҳоло нест.</p>';
- return h+hist.map(o=>`<div class="cd"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleDateString()} ${new Date(o.ts).toLocaleTimeString().slice(0,5)}<br>${o.it.map(i=>esc(i.n)+' × '+i.q).join(', ')}<br><b>${o.it.reduce((a,i)=>a+i.p*i.q,0)} сомонӣ</b> · ${({new:'⏳ Интизор',ok:'✅ Қабул шуд',done:'🎉 Гирифта шуд',no:'❌ Нагирифт',rej:'🚫 Рад шуд'})[o.st]||''}</div>`).join('')}
+ return h+hist.map(o=>`<div class="cd"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleDateString()} ${new Date(o.ts).toLocaleTimeString().slice(0,5)}<br>${o.it.map(i=>esc(i.n)+' × '+i.q).join(', ')}<br><b>${o.it.reduce((a,i)=>a+i.p*i.q,0)} сомонӣ</b> · ${({new:'⏳ Интизор',ok:'🟡 Таёр мешавад',sent:'📦 Фиристода шуд',paid:'✅ Анҷом ёфт',done:'🎉 Гирифта шуд',no:'❌ Нагирифт',rej:'🚫 Рад шуд'})[o.st]||''}</div>`).join('')}
 function SM(){try{localStorage.setItem('me',JSON.stringify({nm:$('#mn').value,ph:$('#mp').value}))}catch(e){}T('✓ Захира шуд')}
 function LH(){hist=null;R();Promise.all(IDS().map(i=>DB.get(i).catch(()=>null))).then(a=>{hist=a.filter(Boolean);if(cl=='m')R()})}
 setInterval(()=>{const e=$('#sl');if(e&&e.children.length>1){const w=e.clientWidth,n=e.children.length;e.scrollTo({left:((Math.round(e.scrollLeft/w)+1)%n)*w,behavior:'smooth'})}},4000);
@@ -200,7 +216,8 @@ function VA(id){const n=$('#vn'+id).value.trim(),p=+$('#vp'+id).value;if(!n||!p)
 function VD(id,j){DB.set('menu',id,{v:(dd(id).v||[]).filter((_,x)=>x!=j)})}
 const ED=d=>{const i=(k,p,t)=>`<label><small>${p}</small><input ${t?'type="number"':''} value="${esc(d[k]||'')}" onchange="DB.set('menu','${d.id}',{${k}:${t?'+this.value':'this.value'}})"></label>`;return i('n','Ном')+i('r','Рецепт / таркиб')+i('t','Дақиқа',1)+i('o','Нархи пештара (аксия, 0 = нест)',1)+VE(d)};
 const GS=(v,fn,id)=>`<select ${id?'id="'+id+'"':''} onchange="${fn}"><option value="">Гурӯҳ</option>${(S.c.cats||[]).map(x=>`<option value="${x.id}" ${x.id==v?'selected':''}>${esc(x.n)}</option>`).join('')}</select>`;
-function Rj(id){const r=prompt('Сабаби рад кардан (ихтиёрӣ):');if(r===null)return;DB.set('orders',id,{st:'rej',rs:r})}
+function St(id,s){const u={st:s};if(s=='sent')u.sa=Date.now();if(s=='paid'){u.pt=Date.now();T('✅ Ба архив гузашт')}DB.set('orders',id,u)}
+function Rj(id){const r=prompt('Сабаби рад кардан (ихтиёрӣ):');if(r===null)return;DB.set('orders',id,{st:'rej',rs:r,rt:Date.now()})}
 function CD(k,id){DB.set('cfg','main',{[k]:(S.c[k]||[]).filter(x=>x.id!=id)})}
 function GA(){const n=$('#gn').value.trim();if(!n)return;DB.set('cfg','main',{cats:[...(S.c.cats||[]),{id:Date.now().toString(36),n,e:$('#ge').value}]})}
 function BA(){const t=$('#bt').value.trim();if(!t)return;DB.set('cfg','main',{ban:[...(S.c.ban||[]),{id:Date.now().toString(36),t,s:$('#bs').value,d:$('#bd').value,i:nbi}]});nbi=''}
@@ -211,15 +228,15 @@ function AS(){const c=S.c,i=(k,p)=>`<input placeholder="${p}" value="${esc(c[k]|
  return `<div class="cd"><b>Тамос</b>${i('ig','Instagram линк (https://...)')}${i('ph','Рақами телефон')}${i('ad','Суроға')}${i('ml','Линки харита (Google Maps)')}</div>`}
 function A(){
  if(!AU)return `<div class="cd"><b>Воридшавии админ</b><input id="le" type="email" placeholder="Почта"><input id="lp" type="password" placeholder="Парол"><button class="pb" onclick="Lg()">Ворид шудан</button></div>`;
- let h=`<div class="nv"><button class="${tab=='o'?'on':''}" onclick="tab='o';R()">Фармоишҳо${OL().filter(o=>o.st=='new').length?' 🔴'+OL().filter(o=>o.st=='new').length:''}</button><button class="${tab=='m'?'on':''}" onclick="tab='m';R()">Меню</button><button class="${tab=='c'?'on':''}" onclick="tab='c';R()">Гурӯҳ/Баннер</button><button class="${tab=='s'?'on':''}" onclick="tab='s';R()">Тамос</button><button onclick="DB.logout()">⎋</button></div>`;
- if(tab=='o'){
-  if(!OL().length)h+='<p>Фармоиш ҳоло нест.</p>';
-  h+=OL().reverse().map(o=>`<div class="cd ${o.st=='done'?'ok':(o.st=='no'||o.st=='rej')?'bad':o.st=='new'?'nw':''}"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleTimeString().slice(0,5)} · ${esc(o.nm||'')} ${esc(o.ph)} · ${o.ty=='del'?'Доставка: '+esc(o.a):'Дар ҷой'} · ${o.pay=='card'?'Корт':'Нақд'}
+ let h=`<div class="nv"><button class="${tab=='o'?'on':''}" onclick="tab='o';R()">Фармоишҳо${OL().filter(o=>o.st=='new').length?' 🔴'+OL().filter(o=>o.st=='new').length:''}</button><button class="${tab=='m'?'on':''}" onclick="tab='m';R()">Меню</button><button class="${tab=='ar'?'on':''}" onclick="tab='ar';R()">Архив</button><button class="${tab=='c'?'on':''}" onclick="tab='c';R()">Гурӯҳ/Баннер</button><button class="${tab=='s'?'on':''}" onclick="tab='s';R()">Тамос</button><button onclick="DB.logout()">⎋</button></div>`;
+ if(tab=='o'||tab=='ar'){const L=tab=='o'?OL():OR();
+  if(!L.length)h+='<p>Фармоиш ҳоло нест.</p>';
+  h+=L.slice().reverse().map(o=>`<div class="cd ${(o.st=='paid'||o.st=='done')?'ok':(o.st=='no'||o.st=='rej')?'bad':o.st=='new'?'nw':o.st=='ok'?'yl':o.st=='sent'?'bl':''}"><b>${sid(o)}</b> · ${new Date(o.ts).toLocaleTimeString().slice(0,5)} · ${esc(o.nm||'')} ${esc(o.ph)} · ${o.ty=='del'?'Доставка: '+esc(o.a):'Дар ҷой'} · ${o.pay=='card'?'Корт':'Нақд'}
   ${o.it.map(i=>`<div class="r"><span>${esc(i.n)} × ${i.q}${i.c?'<br><small>💬 '+esc(i.c)+'</small>':''}</span><span>${i.p*i.q} ${o.st=='new'?`<button onclick="X('${o.id}','${i.id}')">✕</button>`:''}</span></div>`).join('')}
   <div class="r"><b>Ҷамъ: ${o.it.reduce((a,i)=>a+i.p*i.q,0)} сомонӣ</b></div>
   ${o.ck?`<small>🧾 Чеки пардохт:</small><img class="im rc" src="${o.ck}" alt="">`:''}
   ${o.st=='new'?`<input id="m${o.id}" type="number" placeholder="Чанд дақиқа омода мешавад?"><button class="pb" onclick="Ac('${o.id}')">Қабул ва паём ба мизоҷ</button> <button onclick="Rj('${o.id}')">🚫 Рад кардан</button>`
-  :o.st=='ok'?`<small>✅ Қабул шуд · ${o.m} дақ. · Ҷавоби мизоҷ интизор аст</small>`
+  :o.st=='ok'?`<b>🟡 Таёр шуда истодааст</b> · ${o.m} дақ.<br><button class="pb" onclick="St('${o.id}','sent')">📦 Ирсол</button>`:o.st=='sent'?`<b>🔵 Фиристода шуд</b><br><button class="pb" onclick="St('${o.id}','paid')">💰 Расчот</button>`:o.st=='paid'?'<b>✅ Расчот шуд</b>'
   :o.st=='done'?'<b>✅ Муваффақ</b>':o.st=='rej'?'<b>🚫 Рад шуд</b>'+(o.rs?' · '+esc(o.rs):''):'<b>❌ Мизоҷ нагирифт</b>'}</div>`).join('');
  }else if(tab=='c'){h+=AC()}else if(tab=='s'){h+=AS()}else{
   h+=S.d.map(d=>`<div class="cd"><div class="r"><span>${d.i?`<img class="th" src="${d.i}" alt="">`:''}<b>${esc(d.n)}</b></span><span><button onclick="ed=ed=='${d.id}'?'':'${d.id}';R()">✏️</button> <button onclick="pid='${d.id}';$('#fi').click()">📷</button> <button onclick="if(confirm('Нест кунем?'))DB.del('menu','${d.id}')">🗑</button></span></div>
@@ -232,7 +249,7 @@ function init(){
  DB.menu(a=>{S.d=a;if(v=='c'?st==0:true)R()});
  DB.cfg(c=>{S.c=c;S.pay=c.pay||'';if(v=='c'?st==0:true)R()});
  let id='';try{id=localStorage.getItem('last')}catch(e){}
- if(id)uo=DB.order(id,o=>{LO=o;if(st==0&&v=='c')R()});
+ if(id)uo=DB.order(id,o=>{NT(o);LO=o;if(st==0&&v=='c')R()});
  DB.auth(u=>{AU=u;if(u&&!ao){ao=1;DB.purge().catch(()=>{});DB.orders(a=>{const n0=S.o.filter(o=>o.st=='new').length,fs=!ld;ld=1;S.o=a;if(!fs&&a.filter(o=>o.st=='new').length>n0)Bp();R()})}R()});
 }
 window.addEventListener('dbready',init);
@@ -255,7 +272,7 @@ const list=s=>s.docs.map(d=>({...d.data(),id:d.id}));
 const W=e=>{alert('Хато: '+e.code+'. Қоидаҳои Firestore ва почтаи админро санҷед.');throw e};
 window.DB={
  menu:cb=>onSnapshot(collection(db,'menu'),s=>cb(list(s))),
- orders:cb=>onSnapshot(query(collection(db,'orders'),where('ts','>',Date.now()-864e5),orderBy('ts')),s=>cb(list(s)),e=>console.log(e)),
+ orders:cb=>onSnapshot(query(collection(db,'orders'),where('ts','>',Date.now()-2592e5),orderBy('ts')),s=>cb(list(s)),e=>console.log(e)),
  order:(id,cb)=>onSnapshot(doc(db,'orders',id),s=>cb(s.exists()?{...s.data(),id:s.id}:null)),
  cfg:cb=>onSnapshot(doc(db,'cfg','main'),s=>cb(s.data()||{})),
  set:(c,id,d)=>setDoc(doc(db,c,id),d,{merge:true}).catch(W),
